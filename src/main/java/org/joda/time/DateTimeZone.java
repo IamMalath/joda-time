@@ -365,54 +365,79 @@ public abstract class DateTimeZone implements Serializable {
      * @return the DateTimeZone object for the zone
      * @throws IllegalArgumentException if the zone is not recognised
      */
+
+
+    /** REFACTORED CODE START **/
+
     public static DateTimeZone forTimeZone(TimeZone zone) {
         if (zone == null) {
             return getDefault();
         }
+
         final String id = zone.getID();
-        if (id == null) {
-            throw new IllegalArgumentException("The TimeZone id must not be null");
-        }
+        validateTimeZoneId(id);
+
         if (id.equals("UTC")) {
             return DateTimeZone.UTC;
         }
 
-        // Convert from old alias before consulting provider since they may differ.
-        DateTimeZone dtz = null;
-        String convId = getConvertedId(id);
-        Provider provider = getProvider();
-        if (convId != null) {
-            dtz = provider.getZone(convId);
-        }
-        if (dtz == null) {
-            dtz = provider.getZone(id);
-        }
+        // Try provider with converted and original ID
+        DateTimeZone dtz = getZoneFromProvider(id);
         if (dtz != null) {
             return dtz;
         }
 
-        // Support GMT+/-hh:mm formats
-        if (convId == null) {
-            convId = id;
-            if (convId.startsWith("GMT+") || convId.startsWith("GMT-")) {
-                convId = convId.substring(3);
-                if (convId.length() > 2) {
-                    char firstDigit = convId.charAt(1);
-                    if (firstDigit > '9' && Character.isDigit(firstDigit)) {
-                        convId = convertToAsciiNumber(convId);
-                    }
-                }
-                int offset = parseOffset(convId);
-                if (offset == 0L) {
-                    return DateTimeZone.UTC;
-                } else {
-                    convId = printOffset(offset);
-                    return fixedOffsetZone(convId, offset);
-                }
-            }
+        // Handle GMT offsets
+        dtz = handleGmtOffsets(id);
+        if (dtz != null) {
+            return dtz;
         }
+
         throw new IllegalArgumentException("The datetime zone id '" + id + "' is not recognised");
     }
+
+    private static void validateTimeZoneId(String id) {
+        if (id == null) {
+            throw new IllegalArgumentException("The TimeZone id must not be null");
+        }
+    }
+
+    private static DateTimeZone getZoneFromProvider(String id) {
+        Provider provider = getProvider();
+        String convId = getConvertedId(id);
+
+        DateTimeZone dtz = (convId != null) ? provider.getZone(convId) : null;
+        if (dtz == null) {
+            dtz = provider.getZone(id);
+        }
+        return dtz;
+    }
+
+    private static DateTimeZone handleGmtOffsets(String id) {
+        if (!id.startsWith("GMT+") && !id.startsWith("GMT-")) {
+            return null;
+        }
+
+        String offsetPart = id.substring(3);
+        if (offsetPart.length() > 2) {
+            char firstDigit = offsetPart.charAt(1);
+            if (firstDigit > '9' && Character.isDigit(firstDigit)) {
+                offsetPart = convertToAsciiNumber(offsetPart);
+            }
+        }
+
+        int offset = parseOffset(offsetPart);
+        if (offset == 0) {
+            return DateTimeZone.UTC;
+        } else {
+            String convId = printOffset(offset);
+            return fixedOffsetZone(convId, offset);
+        }
+    }
+
+    /** REFACTORED CODE END **/
+
+
 
     private static String convertToAsciiNumber(String convId) {
         StringBuilder buf = new StringBuilder(convId);
@@ -1365,3 +1390,4 @@ public abstract class DateTimeZone implements Serializable {
     }
 
 }
+
