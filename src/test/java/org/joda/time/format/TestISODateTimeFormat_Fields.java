@@ -146,31 +146,33 @@ public class TestISODateTimeFormat_Fields extends TestCase {
     }
 
     //-----------------------------------------------------------------------
+    /** REFACTORED CODE START **/
+    @Test
     public void testForFields_calBased_Y() {
-        DateTimeFieldType[] fields = new DateTimeFieldType[] {
-                DateTimeFieldType.year(),
-        };
-        int[] values = new int[] {2005};
-        List types = new ArrayList(Arrays.asList(fields));
-        DateTimeFormatter f = ISODateTimeFormat.forFields(types, true, true);
-        assertEquals("2005", f.print(new Partial(fields, values)));
-        assertEquals(0, types.size());
-        
-        types = new ArrayList(Arrays.asList(fields));
-        f = ISODateTimeFormat.forFields(types, true, false);
-        assertEquals("2005", f.print(new Partial(fields, values)));
-        assertEquals(0, types.size());
-        
-        types = new ArrayList(Arrays.asList(fields));
-        f = ISODateTimeFormat.forFields(types, false, true);
-        assertEquals("2005", f.print(new Partial(fields, values)));
-        assertEquals(0, types.size());
-        
-        types = new ArrayList(Arrays.asList(fields));
-        f = ISODateTimeFormat.forFields(types, false, false);
-        assertEquals("2005", f.print(new Partial(fields, values)));
-        assertEquals(0, types.size());
+        runYearFieldTest();
     }
+
+    @Test
+    public void testForFields_ordinalBased_Y() {
+        runYearFieldTest();
+    }
+
+    private void runYearFieldTest() {
+        DateTimeFieldType[] fields = new DateTimeFieldType[] { DateTimeFieldType.year() };
+        int[] values = new int[] { 2005 };
+
+        // Iterate over all combinations of the boolean flags
+        boolean[] trueFalse = { true, false };
+        for (boolean extended: trueFalse) {
+            for (boolean strict: trueFalse) {
+                List<DateTimeFieldType> types = new ArrayList<>(Arrays.asList(fields));
+                DateTimeFormatter f = ISODateTimeFormat.forFields(types, extended, strict);
+                assertEquals("2005", f.print(new Partial(fields, values)));
+                assertEquals(0, types.size()); // ensure the list is emptied
+            }
+        }
+    }
+    /** REFACTORED CODE END **/
 
     //-----------------------------------------------------------------------
     public void testForFields_calBased_M() {
@@ -537,33 +539,6 @@ public class TestISODateTimeFormat_Fields extends TestCase {
         types = new ArrayList(Arrays.asList(fields));
         f = ISODateTimeFormat.forFields(types, false, false);
         assertEquals("2005177", f.print(new Partial(fields, values)));
-        assertEquals(0, types.size());
-    }
-
-    //-----------------------------------------------------------------------
-    public void testForFields_ordinalBased_Y() {
-        DateTimeFieldType[] fields = new DateTimeFieldType[] {
-                DateTimeFieldType.year(),
-        };
-        int[] values = new int[] {2005};
-        List types = new ArrayList(Arrays.asList(fields));
-        DateTimeFormatter f = ISODateTimeFormat.forFields(types, true, true);
-        assertEquals("2005", f.print(new Partial(fields, values)));
-        assertEquals(0, types.size());
-        
-        types = new ArrayList(Arrays.asList(fields));
-        f = ISODateTimeFormat.forFields(types, true, false);
-        assertEquals("2005", f.print(new Partial(fields, values)));
-        assertEquals(0, types.size());
-        
-        types = new ArrayList(Arrays.asList(fields));
-        f = ISODateTimeFormat.forFields(types, false, true);
-        assertEquals("2005", f.print(new Partial(fields, values)));
-        assertEquals(0, types.size());
-        
-        types = new ArrayList(Arrays.asList(fields));
-        f = ISODateTimeFormat.forFields(types, false, false);
-        assertEquals("2005", f.print(new Partial(fields, values)));
         assertEquals(0, types.size());
     }
 
@@ -1151,3 +1126,4 @@ public class TestISODateTimeFormat_Fields extends TestCase {
     }
 
 }
+
